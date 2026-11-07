@@ -1,0 +1,5 @@
+export class ArcadeAudio{
+ constructor(){this.enabled=false;this.context=null;this.last={};}
+ async enable(enabled){this.enabled=enabled;if(enabled){try{this.context??=new (window.AudioContext||window.webkitAudioContext)();await this.context.resume();}catch{this.enabled=false;}}return this.enabled;}
+ play(name){if(!this.enabled||!this.context||this.context.state!=='running')return;const ctx=this.context,t=ctx.currentTime;if(t-(this.last[name]??-99)<(name==='move'?.07:.025))return;this.last[name]=t;const notes={shoot:[680,230,.075,'square'],hit:[150,55,.10,'triangle'],score:[500,1000,.13,'sine'],lose:[240,65,.4,'triangle'],win:[550,1100,.45,'sine'],move:[230,300,.035,'sine']};const [a,b,d,type]=notes[name]||notes.move;const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=type;osc.frequency.setValueAtTime(a,t);osc.frequency.exponentialRampToValueAtTime(b,t+d);gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(type==='square'?.025:.09,t+.008);gain.gain.exponentialRampToValueAtTime(.0001,t+d);osc.connect(gain);gain.connect(ctx.destination);osc.start(t);osc.stop(t+d+.015);osc.onended=()=>{osc.disconnect();gain.disconnect();};}
+}
