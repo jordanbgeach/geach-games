@@ -2,7 +2,7 @@
 
 **Ten little escapes. One browser arcade.**
 
-Geach Games brings classic arcade ideas into a polished, responsive collection with original canvas artwork, smooth animation, and instant play. Built for [jordangeach.com/games/](https://jordangeach.com/games/).
+Geach Games brings classic arcade ideas into a polished, responsive collection with original canvas artwork, smooth animation, and instant play. **Play now: [jordangeach.com/games/](https://jordangeach.com/games/).**
 
 ![Geach Games arcade library](docs/arcade-preview.jpg)
 
