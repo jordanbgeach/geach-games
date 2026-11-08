@@ -1,0 +1,26 @@
+const W=960,H=600,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const TERRAIN=[[0,490],[80,455],[150,485],[190,465],[290,465],[350,520],[420,510],[520,510],[580,470],[640,495],[700,450],[735,425],[845,425],[900,470],[960,460]];
+export default function createLunar(api){
+  const pads=[{x:190,w:100,y:465,done:false},{x:420,w:100,y:510,done:false},{x:735,w:110,y:425,done:false}];
+  const ship={x:240,y:160,vx:0,vy:0,a:0,fuel:100};let score=0,lives=3,landings=0,time=0,thrust=false,over=false,pause=0,status='';
+  function height(x){for(let i=1;i<TERRAIN.length;i++)if(x<=TERRAIN[i][0]){const [ax,ay]=TERRAIN[i-1],[bx,by]=TERRAIN[i];return ay+(by-ay)*(x-ax)/(bx-ax);}return 460;}
+  function reset(){const target=pads.find(p=>!p.done);ship.x=clamp((target?.x||420)+150,100,860);ship.y=140;ship.vx=0;ship.vy=0;ship.a=0;ship.fuel=Math.min(100,ship.fuel+55);pause=0;}
+  function finish(won){if(over)return;over=true;api.sound(won?'win':'lose');api.finish({title:won?'A perfect lunar delivery':'The moon is a careful teacher',message:`${landings} of 3 pads supplied · ${score} points`,won});}
+  function crash(){lives--;pause=1.4;status='ROUGH LANDING';api.sound('lose');api.burst(ship.x,ship.y,'#f0a87b',25);if(!lives)finish(false);}
+  return {
+    update(dt,input){if(over)return;time+=dt;if(pause>0){pause-=dt;if(pause<=0)reset();return;}
+      ship.a+=(Number(input.held('ArrowRight')||input.held('KeyD'))-Number(input.held('ArrowLeft')||input.held('KeyA')))*2.1*dt;ship.a=Math.atan2(Math.sin(ship.a),Math.cos(ship.a));thrust=ship.fuel>0&&(input.held('ArrowUp')||input.held('KeyW')||input.held('Space')||input.pointer.down);
+      if(thrust){ship.vx+=Math.sin(ship.a)*104*dt;ship.vy-=Math.cos(ship.a)*104*dt;ship.fuel=Math.max(0,ship.fuel-9*dt);}ship.vx+=Math.sin(time*.35)*1.3*dt;ship.vy+=38*dt;ship.vx=clamp(ship.vx,-180,180);ship.vy=clamp(ship.vy,-150,180);ship.x+=ship.vx*dt;ship.y+=ship.vy*dt;
+      if(ship.x<18||ship.x>W-18){ship.x=clamp(ship.x,18,W-18);ship.vx*=-.35;}if(ship.y<48){ship.y=48;ship.vy=Math.max(0,ship.vy);}
+      const ground=Math.min(height(ship.x-11),height(ship.x+11));if(ship.y+17>=ground){const pad=pads.find(p=>ship.x-13>=p.x&&ship.x+13<=p.x+p.w&&Math.abs(p.y-ground)<1);if(pad&&Math.abs(ship.vx)<24&&ship.vy>=0&&ship.vy<36&&Math.abs(ship.a)<.21){ship.y=pad.y-17;ship.vx=ship.vy=0;if(!pad.done){pad.done=true;landings++;score+=500+Math.floor(ship.fuel)*5;api.score(score);api.sound('score');api.burst(ship.x,ship.y,'#b9e6ba',22);status='DELIVERY COMPLETE';}else status='PAD ALREADY SUPPLIED';if(landings===3)finish(true);else pause=1.8;}else crash();}
+    },
+    draw(c){c.fillStyle='#132334';c.fillRect(0,0,W,H);for(let i=0;i<70;i++){c.fillStyle=i%6?'#496271':'#c2d2ca';c.fillRect((i*173+29)%W,(i*83+41)%410,i%6?1:2,i%6?1:2);}c.fillStyle='#7aada7';c.beginPath();c.arc(795,112,44,0,Math.PI*2);c.fill();c.fillStyle='#97c7ad';c.beginPath();c.ellipse(786,95,20,10,-.4,0,Math.PI*2);c.ellipse(812,125,15,19,.3,0,Math.PI*2);c.fill();
+      c.beginPath();c.moveTo(0,H);for(const [x,y]of TERRAIN)c.lineTo(x,y);c.lineTo(W,H);c.closePath();c.fillStyle='#3a414b';c.fill();c.strokeStyle='#818b8c';c.lineWidth=2;c.stroke();for(let i=0;i<20;i++){const x=25+i*48,y=height(x)+17+(i%3)*12;c.strokeStyle='#4e5760';c.beginPath();c.ellipse(x,y,12+i%4,4+i%3,0,0,Math.PI*2);c.stroke();}
+      pads.forEach((p,i)=>{c.fillStyle=p.done?'#87bb94':'#f0cb89';c.fillRect(p.x,p.y-4,p.w,5);c.strokeStyle=c.fillStyle;c.beginPath();c.moveTo(p.x+5,p.y);c.lineTo(p.x+5,p.y-26);c.lineTo(p.x+19,p.y-21);c.lineTo(p.x+5,p.y-16);c.stroke();c.font='12px monospace';c.textAlign='center';c.fillText(p.done?'SUPPLIED':`PAD ${i+1}`,p.x+p.w/2,p.y+20);});
+      if(pause<=0||status!=='ROUGH LANDING'){c.save();c.translate(ship.x,ship.y);c.rotate(ship.a);if(thrust&&pause<=0){c.fillStyle='#f3b17d';c.beginPath();c.moveTo(-7,8);c.lineTo(0,31+Math.sin(time*50)*6);c.lineTo(7,8);c.fill();}c.strokeStyle='#d4dfc1';c.lineWidth=3;c.beginPath();c.moveTo(-8,5);c.lineTo(-15,17);c.lineTo(-21,17);c.moveTo(8,5);c.lineTo(15,17);c.lineTo(21,17);c.stroke();c.fillStyle='#e9dec0';c.beginPath();c.roundRect(-12,-13,24,25,5);c.fill();c.fillStyle='#477386';c.beginPath();c.arc(0,-5,6,0,Math.PI*2);c.fill();c.restore();}
+      c.fillStyle='#112333e8';c.beginPath();c.roundRect(22,20,224,126,10);c.fill();c.fillStyle='#c1d7ca';c.font='600 12px monospace';c.textAlign='left';c.fillText(`HULLS ${'● '.repeat(lives)}`,38,45);c.fillText(`HORIZONTAL ${Math.abs(ship.vx).toFixed(0).padStart(3)}  / 24`,38,69);c.fillText(`DESCENT    ${Math.max(0,ship.vy).toFixed(0).padStart(3)}  / 36`,38,91);c.fillText(`TILT       ${Math.abs(ship.a*180/Math.PI).toFixed(0).padStart(3)}° / 12°`,38,113);c.fillStyle=ship.fuel<20?'#edaa81':'#b8ddb1';c.fillRect(38,129,184*ship.fuel/100,4);c.textAlign='right';c.fillStyle='#c1d7ca';c.fillText(`FUEL ${Math.ceil(ship.fuel)}%   ·   PADS ${landings}/3`,935,32);
+      if(pause>0){c.textAlign='center';c.fillStyle=status==='ROUGH LANDING'?'#f0b18c':'#c5e6bd';c.font='bold 24px monospace';c.fillText(status,480,250);}c.textAlign='center';c.fillStyle='#9cb4bc';c.font='12px monospace';c.fillText('LEVEL THE SHIP. LAND GENTLY. SUPPLY ALL THREE PADS.',480,580);c.textAlign='left';
+    },
+    inspect:()=>({score,lives,landings,over,pause,status,thrust,ship:{...ship},pads:pads.map(p=>({...p}))})
+  };
+}

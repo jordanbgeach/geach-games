@@ -1,9 +1,9 @@
 {
   "name": "geach-games",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "Ten original browser arcade games, ready for Hostinger.",
+  "description": "Forty original browser arcade games, ready for Hostinger.",
   "scripts": {
     "dev": "node scripts/serve.mjs",
     "build": "node scripts/build.mjs",

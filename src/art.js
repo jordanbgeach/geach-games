@@ -1,7 +1,11 @@
+import {artwork as actionArt} from './collections/action-art.js';
+import {artwork as puzzleArt} from './collections/puzzle-art.js';
+import {artwork as classicsArt} from './collections/classics-art.js';
 const starfield=()=>Array.from({length:55},(_,i)=>`<circle cx="${(i*173+37)%640}" cy="${(i*97+21)%390}" r="${i%7===0?2:1}" fill="currentColor" opacity="${.15+(i%4)*.15}"/>`).join('');
 const rock=(x,y,s,r=0)=>`<g transform="translate(${x} ${y}) rotate(${r}) scale(${s})"><path d="M-40-30-12-46 17-38 44-15 33 19 12 42-20 31-43 4Z" fill="#263f3a" stroke="#c3ef86" stroke-width="2"/><path d="m-26-18 19 9 9-20m-9 20-11 20 20 16m1-36 24 10" fill="none" stroke="#c3ef86" opacity=".25"/></g>`;
 const alien=(x,y,c)=>`<g transform="translate(${x} ${y})" fill="${c}"><path d="M8 0h8v8h24V0h8v8h-8v8h16v8h8v24h-8V32h-8v16H16V32H8v16H0V24h8V16h16V8H8Z"/><path d="M16 48h8v8h-8m24-8h8v8h-8"/><path d="M16 24h8v8h-8m24-8h8v8h-8" fill="#1e263a"/></g>`;
 export function artwork(id,hero=false){
+ const expanded=actionArt(id)||puzzleArt(id)||classicsArt(id);if(expanded)return expanded;
  let bg='#1b2f2a',fg='#c4ed8b',scene='';
  if(id==='asteroids') scene=`${starfield()}<ellipse cx="320" cy="196" rx="240" ry="135" fill="none" stroke="#adc3a2" opacity=".12"/><ellipse cx="320" cy="196" rx="180" ry="100" fill="none" stroke="#adc3a2" opacity=".12"/>${rock(118,110,1.1,-22)}${rock(475,95,.65,15)}${rock(510,285,1.35,40)}${rock(206,312,.45)}<g transform="translate(326 194) rotate(32)"><path d="m0-66 43 102-43-18-43 18Z" fill="#c3ef86"/><path d="m0-42 0 60-23 10Z" fill="#8fbd62"/><path d="m-15 31 15 54 15-54" fill="#f7a474"/><path d="m-7 35 7 26 7-26" fill="#f5edcf"/></g><path d="m370 99 16-28m20-35 7-13" stroke="#e8f8c9" stroke-width="4" stroke-linecap="round"/><path d="M59 332h54m-27-27v54" stroke="#c3ef86" opacity=".4"/>`;
  if(id==='breakout'){bg='#3f292e';fg='#fac0a4';for(let r=0;r<4;r++)for(let c=0;c<7;c++)scene+=`<rect x="${65+c*74}" y="${55+r*39}" width="64" height="28" rx="3" fill="${['#faad8b','#e68e78','#e5bb9d','#bdc8b2'][r]}" opacity="${r===0&&c===4?.14:1}"/>`;scene+=`<path d="m423 174-104 96 37 67" fill="none" stroke="#ffd6bc" stroke-width="2" stroke-dasharray="6 8" opacity=".5"/><circle cx="319" cy="270" r="10" fill="#fff5dc"/><rect x="278" y="331" width="140" height="14" rx="7" fill="#fac0a4"/>`;}

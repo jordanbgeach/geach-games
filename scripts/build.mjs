@@ -1,4 +1,13 @@
-import {cp,mkdir,rm} from 'node:fs/promises';
-await rm('dist',{recursive:true,force:true}); await mkdir('dist',{recursive:true});
-for(const file of ['index.html','src','assets','.htaccess']) await cp(file,`dist/${file}`,{recursive:true});
-console.log('Built dist/ — upload its contents to public_html/games/ on Hostinger.');
+import {validateDist} from './validate-dist.mjs';
+import {cp,mkdir,rm,readFile,writeFile} from 'node:fs/promises';
+const {version}=JSON.parse(await readFile('package.json','utf8'));
+if(!/^\d+\.\d+\.\d+$/.test(version))throw Error('Use a numeric release version.');
+const release=`releases/${version}`;
+await rm('dist',{recursive:true,force:true});
+await mkdir(`dist/${release}`,{recursive:true});
+for(const file of ['src','assets'])await cp(file,`dist/${release}/${file}`,{recursive:true});
+await cp('.htaccess','dist/.htaccess');
+const html=(await readFile('index.html','utf8')).replaceAll('./src/',`./${release}/src/`).replaceAll('./assets/',`./${release}/assets/`);
+await writeFile('dist/index.html',html);
+const checked=await validateDist();console.log(`Verified ${checked.games} games and ${checked.references} local asset references.`);
+console.log(`Built dist/ — version ${version}. Upload its contents to public_html/games/.`);
